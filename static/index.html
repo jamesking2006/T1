@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="manifest" href="/static/manifest.json">
+<meta name="theme-color" content="#0b69ff">
+<title>T1</title>
+<style>
+:root{--blue:#0b69ff;--bg:#f7f9fc}
+body{font-family:-apple-system,Segoe UI,Roboto; margin:0; padding:16px; background:var(--bg)}
+header{display:flex; justify-content:space-between; align-items:center}
+button{background:var(--blue); color:white; border:0; padding:10px 12px; border-radius:8px}
+.card{background:white; padding:12px; border-radius:10px; margin-top:12px}
+.small{color:#666; font-size:0.9rem}
+</style>
+</head>
+<body>
+<header><h1>T1</h1><div><button onclick="start()">Start</button> <button onclick="pause()">Pause</button></div></header>
+<div class="card"><div>Status: <span id="status">Loading</span></div><div class="small" id="last"></div></div>
+<div class="card"><h3>Positions</h3><div id="pos">Loading...</div></div>
+<script>
+const api = async(p,m='GET')=>{ const r=await fetch('/api'+p,{method:m}); return r.json() }
+async function refresh(){
+  try{
+    const s = await api('/status'); document.getElementById('status').innerText = s.running?'Running':'Paused';
+    document.getElementById('last').innerText = s.last_run || '';
+    const ps = await api('/positions'); const el=document.getElementById('pos');
+    if(!ps || ps.length===0) el.innerText='No open positions'; else el.innerHTML = ps.map(x=>`<div>${x.symbol} ${x.qty} @ ${x.entry_price}</div>`).join('');
+  }catch(e){ console.error(e); }
+}
+async function start(){ await api('/start','POST'); refresh(); }
+async function pause(){ await api('/pause','POST'); refresh(); }
+setInterval(refresh,5000); refresh();
+</script>
+</body>
+</html>
